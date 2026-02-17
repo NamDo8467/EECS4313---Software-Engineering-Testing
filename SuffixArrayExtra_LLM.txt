@@ -1,0 +1,13 @@
+@Test
+public void testPrefixFunction_RepeatingPattern() {
+    // "aabaabaab" triggers ALL 4 condition combinations:
+    //
+    // TC1 (j=0, chars match)  → i=1: j=0, s[1]='a'==s[0]='a'  → false&&false=false
+    // TC2 (j=0, chars differ) → i=2: j=0, s[2]='b'!=s[0]='a'  → false&&true =false (short-circuit)
+    // TC3 (j>0, chars match)  → i=4: j=1, s[4]='a'==s[1]='a'  → true &&false=false
+    // TC4 (j>0, chars differ) → i=2: j=1, s[2]='b'!=s[1]='a'  → true &&true =true  (enters loop)
+
+    int[] pi = SuffixArrayExtras.prefixFunction("aabaabaab");
+
+    assertArrayEquals(new int[] {0, 1, 0, 1, 2, 3, 4, 5, 6}, pi);
+}

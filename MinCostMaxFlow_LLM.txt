@@ -1,0 +1,26 @@
+import static org.junit.Assert.assertTrue;
+
+@Test
+public void testMinCostMaxFlow_WithZeroCapacityEdge() {
+    // This test covers TC2: original=true, capacity=0
+    // The condition in hasNegativeCycle() line 199: !e.original || e.capacity <= 0
+    // When e.original=true and e.capacity=0: false || true = TRUE (skip edge)
+    
+    // This test verifies that edges with zero capacity are properly handled
+    MinCostMaxFlow flow = new MinCostMaxFlow(3);
+    
+    // Add edges including one with zero capacity
+    flow.addEdge(0, 1, 5, 1);   // Normal edge: capacity=5, cost=1
+    flow.addEdge(0, 2, 0, 1);   // Zero capacity edge: capacity=0, cost=1
+    flow.addEdge(1, 2, 5, 1);   // Normal edge: capacity=5, cost=1
+    
+    // Run max flow from 0 to 2
+    Pair<Integer, Long> result = flow.minCostMaxFlow(0, 2);
+    
+    // Expected: Flow should be 5 (only through 0→1→2, ignoring 0→2 with capacity=0)
+    // Cost should be 10 (5 units * 2 edges * cost 1)
+    assertEquals(new Pair<Integer, Long>(5, 10L), result);
+    
+    // The zero-capacity edge should not affect the flow calculation
+    // This verifies the condition properly skips edges with capacity <= 0
+}

@@ -1,0 +1,22 @@
+import static org.junit.Assert.assertThrows;
+  
+@Test
+public void testAddPattern_StrictValidation_EmptyPattern() {
+    // This test covers TC4: strictValidation=true, pattern=""
+    // Expected: Should throw IllegalArgumentException
+    
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setStrictValidation(true);
+    
+    // Try to add an empty pattern with strict validation enabled
+    IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> ac.addPattern("", 1)
+    );
+    
+    // Verify the error message is correct
+    assertEquals(
+        "Pattern can't be empty when strict validation is enabled.",
+        exception.getMessage()
+    );
+}
