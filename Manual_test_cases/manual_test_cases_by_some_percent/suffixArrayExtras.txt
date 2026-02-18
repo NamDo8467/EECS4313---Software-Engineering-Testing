@@ -1,0 +1,10 @@
+@Test
+  public void testBwtSentinel(){
+    char[] arr = {'e', 'b'};
+    String input = new String(arr);
+
+    BwtResult result = SuffixArrayExtras.burrowsWheelerTransform(input);
+   
+    assertEquals('\u0001', result.getSentinel());
+
+  }
