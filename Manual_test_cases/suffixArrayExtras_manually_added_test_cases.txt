@@ -1,0 +1,160 @@
+  @Test
+  public void testBwtPrimaryIndex(){
+ 
+    char[] arr = {'e', 'b'};
+    String input = new String(arr);
+
+    BwtResult result = SuffixArrayExtras.burrowsWheelerTransform(input);
+   
+    assertEquals(2, result.getPrimaryIndex());
+   
+  }
+
+  @Test
+  public void testBwtTransform(){
+
+    char[] arr = {'b', 'e'};
+    String input = new String(arr);
+
+    BwtResult result = SuffixArrayExtras.burrowsWheelerTransform(input);
+  
+    char[] arr1 = {'e', '\u0001', 'b'};
+    String expected = new String(arr1);
+
+    assertEquals(expected, result.getTransformed());
+  }
+
+  @Test
+  public void testBwtTransformAgainstNull(){
+        IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> SuffixArrayExtras.burrowsWheelerTransform(null)
+    );
+
+  }
+
+  @Test
+  public void testInverseBurrowsWheelerAgaistNull(){
+
+          IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> SuffixArrayExtras.inverseBurrowsWheeler(null)
+    );
+  }
+
+  @Test
+  public void testInverseBurrowsWheelerAgaistNonAscii(){
+    BwtResult result = new BwtResult("\u0100bc", 0, '$');
+            IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> SuffixArrayExtras.inverseBurrowsWheeler(result)
+    );
+
+
+
+  }
+
+  @Test
+  public void testInverseBurrowsWheelerAgaistInvalidSentinelInRestoredText(){
+    BwtResult realResult = SuffixArrayExtras.burrowsWheelerTransform("ab");
+    BwtResult tampered = new BwtResult(
+    realResult.getTransformed(),
+    realResult.getPrimaryIndex(),
+    '$'  // wrong sentinel — real one is '\u0001'
+);
+
+        IllegalStateException exception = assertThrows(
+        IllegalStateException.class,
+        () -> SuffixArrayExtras.inverseBurrowsWheeler(tampered)
+    );
+
+  }
+
+  @Test
+  public void testInverseBurrowsWheeler(){
+    BwtResult result = SuffixArrayExtras.burrowsWheelerTransform("banana");
+    String original = SuffixArrayExtras.inverseBurrowsWheeler(result);
+    
+    assertEquals("banana", original);
+
+  }
+
+  @Test
+  public void testChooseSentinelAgainst255SizedString(){
+    StringBuilder sb = new StringBuilder();
+    for (int c = 1; c <= 255; c++) {
+        sb.append((char) c);
+    }
+    String s = sb.toString(); // length 255, contains every char from 1–255
+        IllegalStateException exception = assertThrows(
+        IllegalStateException.class,
+        () -> SuffixArrayExtras.burrowsWheelerTransform(s)
+    );
+  }
+
+  @Test public void testLongestRepeatedSubstringNaive(){
+   
+    // Check against null input
+    IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> SuffixArrayExtras.longestRepeatedSubstringNaive(null)
+    );
+
+
+    // Check against empty string
+    assertEquals("", SuffixArrayExtras.longestRepeatedSubstringNaive(""));
+  
+
+
+
+    String input = "aaabc";
+    assertEquals("aa", SuffixArrayExtras.longestRepeatedSubstringNaive(input));
+  
+
+
+    // Check against no repeated string
+    String noRepeatedString = "abcd";
+    assertEquals("", SuffixArrayExtras.longestRepeatedSubstringNaive(noRepeatedString));
+
+
+  }
+
+  @Test
+  public void testPrefixFunctionAgainstNull(){
+    
+    IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> SuffixArrayExtras.prefixFunction(null)
+    );
+  }
+
+  @Test
+  public void testZAlgorithmAgainstNull(){
+
+    IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> SuffixArrayExtras.zAlgorithm(null)
+    );
+  }
+
+  @Test
+  public void testCountDistinctSubstringsAgainstNull(){
+
+    IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException.class,
+        () -> SuffixArrayExtras.countDistinctSubstrings(null)
+    );
+  }
+
+  @Test
+  public void testCountDistinctSubstringsAgainstLongString(){
+    // String of 65,536 unique characters (e.g., using Unicode code points)
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 65536; i++) {
+        sb.append((char) i); // all unique chars
+    }
+    String s = sb.toString();
+
+    assertEquals(Integer.MAX_VALUE, SuffixArrayExtras.countDistinctSubstrings(s));
+// countDistinctSubstrings(s) → returns Integer.MAX_VALUE
+  }

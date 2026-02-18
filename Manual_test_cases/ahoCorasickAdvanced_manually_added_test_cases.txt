@@ -1,0 +1,329 @@
+  // Test 1: setStrictValidation after build
+@Test(expected = IllegalStateException.class)
+public void testSetStrictValidationAfterBuild() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.setStrictValidation(true); 
+    // throws IllegalStateException("Cannot change validation settings after build().")
+}
+
+// Test 2: setCaseInsensitive after build
+@Test(expected = IllegalStateException.class)
+public void testSetCaseInsensitiveAfterBuild() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.setCaseInsensitive(true);
+    // throws IllegalStateException("Cannot change case sensitivity after build().")
+}
+
+// Test 3: setNormalizeWhitespace after build
+@Test(expected = IllegalStateException.class)
+public void testSetNormalizeWhitespaceAfterBuild() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.setNormalizeWhitespace(true);
+    // throws IllegalStateException("Cannot change whitespace normalization after build().")
+}
+
+  @Test(expected = IllegalStateException.class)
+public void testCountOccurrencesByPatternWithoutBuild() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.countOccurrencesByPattern("hello world");
+    // throws IllegalStateException("build() must be called before search().")
+}
+
+    // Test 4: covers this.normalizeWhitespace = normalizeWhitespace
+@Test
+public void testSetNormalizeWhitespace() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setNormalizeWhitespace(true); // ensureNotBuilt passes, assignment executes
+    ac.addPattern("hello world", 1);
+    ac.build();
+    // verify it works by searching with tab instead of space
+    List<Match> matches = ac.searchAll("hello\tworld");
+    assertEquals(1, matches.size());
+}
+
+
+
+  // Test 1: covers null check (line 2-3)
+@Test(expected = IllegalArgumentException.class)
+public void testValidateTextNull() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.searchAll(null);
+    // throws IllegalArgumentException("Text can't be null.")
+}
+
+// Test 2: covers empty string check (line 4-5)
+@Test(expected = IllegalArgumentException.class)
+public void testValidateTextEmpty() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setStrictValidation(true);
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.searchAll("");
+    // throws IllegalArgumentException("Text can't be empty when strict validation is enabled.")
+}
+
+
+  @Test
+public void testNormalizePatternWithCaseInsensitive() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setCaseInsensitive(true);       // bypasses early return
+    ac.addPattern("Hello", 1);         // triggers StringBuilder path
+    ac.build();
+    List<Match> matches = ac.searchAll("hello world");
+    // matches "hello" because pattern "Hello" was normalized to "hello"
+    assertEquals(1, matches.size());
+}
+
+@Test
+public void testSelectMaxScoreNonOverlapping() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("ab", 10);
+    ac.addPattern("b", 1);
+    ac.addPattern("cd", 10);
+    ac.build();
+
+    List<Match> result = ac.selectMaxScoreNonOverlapping("ab cd");
+
+    assertEquals(2, result.size());
+    assertEquals(0, result.get(0).getStart()); // "ab"
+    assertEquals(3, result.get(1).getStart()); // "cd"
+}
+
+@Test
+public void testSelectMaxScoreNonOverlappingNoMatches() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("xyz", 1);
+    ac.build();
+    List<Match> result = ac.selectMaxScoreNonOverlapping("hello");
+    // "xyz" not found in "hello" → matches.isEmpty() = true → returns emptyList
+    assertTrue(result.isEmpty());
+}
+
+  // Test 1: covers best==null, m.length() > best.length(), return best (non-null)
+@Test
+public void testFindLongestMatchNormal() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("a", 1);   // found first  → best == null → true
+    ac.addPattern("abc", 5); // found later  → m.length() > best.length() → true
+    ac.build();
+
+    Match result = ac.findLongestMatch("abc");
+    assertEquals(0, result.getStart());
+    assertEquals(3, result.length());
+}
+
+// Test 2: covers return best (null) — no matches found
+@Test
+public void testFindLongestMatchNoMatch() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("xyz", 1);
+    ac.build();
+
+    Match result = ac.findLongestMatch("abc");
+    assertNull(result);
+  }
+
+  @Test
+public void testFindLongestMatchSameLengthEarlierStart() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("bc", 1);  // length 2, starts at 1 — found first, best = "bc"
+    ac.addPattern("ab", 2);  // length 2, starts at 0 — same length, earlier start → replaces best
+    ac.build();
+
+    Match result = ac.findLongestMatch("abc");
+    // "bc" found first (end=2), "ab" found... 
+    // with refactored version using searchAll, "ab" at start=0 < "bc" at start=1
+    assertEquals(0, result.getStart()); // "ab" wins due to earlier start
+}
+
+  // Test 1: match found then covers all.isEmpty() false then returns all.get(0)
+@Test
+public void testSearchFirstFound() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    Match result = ac.searchFirst("hello world");
+    assertNotNull(result);
+    assertEquals(0, result.getStart());
+}
+
+// Test 2: no match then covers all.isEmpty() true then returns null
+@Test
+public void testSearchFirstNotFound() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("xyz", 1);
+    ac.build();
+    Match result = ac.searchFirst("hello world");
+    assertNull(result);
+}
+
+@Test
+public void testScoreMatches() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 3);
+    ac.addPattern("world", 5);
+    ac.build();
+
+    long score = ac.scoreMatches("hello world");
+    // "hello" contributes 3, "world" contributes 5 → total = 8
+    assertEquals(8, score);
+}
+
+
+
+
+  // Test 1: pattern == null
+@Test(expected = IllegalArgumentException.class)
+public void testAddPatternNull() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern(null, 1);
+    // throws IllegalArgumentException("Pattern can't be null.")
+}
+
+// Test 2: built == true
+@Test(expected = IllegalStateException.class)
+public void testAddPatternAfterBuild() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.addPattern("world", 1);
+    // throws IllegalStateException("Cannot add patterns after build().")
+}
+
+// Test 3: strictValidation && pattern.length() == 0
+@Test(expected = IllegalArgumentException.class)
+public void testAddPatternEmptyWithStrictValidation() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setStrictValidation(true);
+    ac.addPattern("", 1);
+    // throws IllegalArgumentException("Pattern can't be empty when strict validation is enabled.")
+}
+
+// Test 4: strictValidation && weight == 0
+@Test(expected = IllegalArgumentException.class)
+public void testAddPatternZeroWeightWithStrictValidation() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setStrictValidation(true);
+    ac.addPattern("hello", 0);
+    // throws IllegalArgumentException("Pattern weight can't be zero when strict validation is enabled.")
+}
+
+// Test 5: strictValidation && weight < 0
+@Test(expected = IllegalArgumentException.class)
+public void testAddPatternNegativeWeightWithStrictValidation() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setStrictValidation(true);
+    ac.addPattern("hello", -1);
+    // throws IllegalArgumentException("Pattern weight can't be negative when strict validation is enabled.")
+}
+
+
+  // Test 1: ensureBuiltForSearch throws
+@Test(expected = IllegalStateException.class)
+public void testSearchAllNotBuilt() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.searchAll("hello", 10);
+    // throws IllegalStateException("build() must be called before search().")
+}
+
+// Test 2: validateText throws (null text)
+@Test(expected = IllegalArgumentException.class)
+public void testSearchAllNullText() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.searchAll(null, 10);
+    // throws IllegalArgumentException("Text can't be null.")
+}
+
+// Test 3: limit < 0 throws
+@Test(expected = IllegalArgumentException.class)
+public void testSearchAllNegativeLimit() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.searchAll("hello", -1);
+    // throws IllegalArgumentException("Limit must be non-negative.")
+}
+
+// Test 4: limit == 0 → return Collections.emptyList()
+@Test
+public void testSearchAllZeroLimit() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    List<Match> result = ac.searchAll("hello", 0);
+    assertTrue(result.isEmpty());
+    // returns Collections.emptyList() via limit == 0 branch
+}
+
+// Test 5: patterns.isEmpty() && strictValidation == true → throws
+// Test 5 is UNREACHABLE — dead code
+// build() throws FIRST with "At least one pattern is required..."
+// before searchAll can ever reach the strictValidation check in patterns.isEmpty()
+// No input can reach:
+// throw new IllegalStateException("No patterns available for search under strict validation.")
+
+// Test 6: patterns.isEmpty() && !strictValidation → return Collections.emptyList()
+@Test
+public void testSearchAllNoPatternsNoStrictValidation() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.build();
+    List<Match> result = ac.searchAll("hello", 10);
+    assertTrue(result.isEmpty());
+    // returns Collections.emptyList() via patterns.isEmpty() branch
+}
+
+
+
+// Test 1: covers first if → build() called twice
+@Test(expected = IllegalStateException.class)
+public void testBuildCalledTwice() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 1);
+    ac.build();
+    ac.build();
+}
+
+// Test 2: covers nodes.get(0).output.addAll AND f = nodes.get(f).fail
+@Test
+public void testBuildOutputAddAllAndFailTraversal() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("", 1);    // empty pattern → root node gets output → addAll triggers
+    ac.addPattern("aac", 2); // "aa" fail="a", child "c": f="a" has no "c", f!=0 → while loop
+    ac.build();
+
+    List<Match> matches = ac.searchAll("aac");
+    assertFalse(matches.isEmpty());
+}
+
+@Test(expected = IllegalStateException.class)
+public void testBuildNoPatternWithStrictValidation() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.setStrictValidation(true);
+    // no patterns added
+    ac.build();
+    // throws IllegalStateException("At least one pattern is required when strict validation is enabled.")
+}
+
+@Test
+public void testGetWeightAndGetPatternId() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("hello", 5);  // patternId = 0, weight = 5
+    ac.build();
+
+    Match match = ac.searchFirst("hello world");
+    assertNotNull(match);
+    assertEquals(0, match.getPatternId());
+    assertEquals(5, match.getWeight());
+}
