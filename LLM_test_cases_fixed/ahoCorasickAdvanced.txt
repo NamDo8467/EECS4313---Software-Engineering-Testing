@@ -1,0 +1,30 @@
+// MISSING: Test null pattern without strict validation
+@Test
+public void testAddPattern_NullPattern() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    assertThrows(IllegalArgumentException.class, () -> {
+        ac.addPattern(null, 1);
+    });
+}
+
+// MISSING: Test negative weight without strict validation
+@Test
+public void testAddPattern_NegativeWeight_NoValidation() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    // Should this be allowed? Test explores the boundary
+    int id = ac.addPattern("test", -5);
+    
+}
+
+// MISSING: Test adding pattern after build()
+@Test
+public void testAddPattern_AfterBuild() {
+    AhoCorasickAdvanced ac = new AhoCorasickAdvanced();
+    ac.addPattern("test", 1);
+    ac.build();
+    
+    // Should throw IllegalStateException
+    assertThrows(IllegalStateException.class, () -> {
+        ac.addPattern("another", 1);
+    });
+}

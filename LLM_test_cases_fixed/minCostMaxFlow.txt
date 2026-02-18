@@ -1,0 +1,14 @@
+@Test
+public void testMinCostMaxFlow_WithZeroCapacityEdge() {
+    MinCostMaxFlow flow = new MinCostMaxFlow(3);
+    flow.addEdge(0, 1, 5, 1);
+    flow.addEdge(0, 2, 0, 1);  // Zero capacity
+    flow.addEdge(1, 2, 5, 1);
+    
+    Pair<Integer, Long> result = flow.minCostMaxFlow(0, 2);
+    
+    // Better: Separate assertions with descriptive messages
+    assertNotNull("Result should not be null", result);
+    assertEquals("Flow should be 5 (only through path 0->1->2)", 
+                 new Pair<Integer, Long>(5, 10L), result);
+}

@@ -1,0 +1,65 @@
+@Test
+public void testZAlgorithm_AllConditionCombinations() {
+    // Test zAlgorithm which has compound condition at line 103:
+    // while (i + z[i] < n && s.charAt(z[i]) == s.charAt(i + z[i]))
+    //
+    // The string "aabaaab" triggers multiple scenarios:
+    //
+    // TC1: (i+z[i]>=n) && (chars match)   → false && ... (boundary reached)
+    // TC2: (i+z[i]>=n) && (chars differ)  → false && ... (boundary with mismatch)
+    // TC3: (i+z[i]<n) && (chars differ)   → true && false (mismatch before boundary)
+    // TC4: (i+z[i]<n) && (chars match)    → true && true (match continues)
+    
+    int[] z = SuffixArrayExtras.zAlgorithm("aabaaab");
+    
+    // Expected Z-array:
+    // z[0] = 0 (not computed by definition)
+    // z[1] = 1 (suffix "abaaab" matches prefix "a" for 1 char)
+    // z[2] = 0 (suffix "baaab" doesn't match prefix "a")
+    // z[3] = 2 (suffix "aaab" matches prefix "aa" for 2 chars)
+    // z[4] = 3 (suffix "aab" matches prefix "aab" for 3 chars)
+    // z[5] = 1 (suffix "ab" matches prefix "a" for 1 char)
+    // z[6] = 0 (suffix "b" doesn't match prefix "a")
+    
+    assertArrayEquals(new int[] {0, 1, 0, 2, 3, 1, 0}, z);
+}
+
+// MISSING: Empty string
+@Test
+public void testBuildSuffixArray_EmptyString() {
+    int[] sa = SuffixArrayExtras.buildSuffixArrayNaive("");
+    assertArrayEquals(new int[] {}, sa);
+}
+
+// MISSING: Single character
+@Test
+public void testBuildSuffixArray_SingleChar() {
+    int[] sa = SuffixArrayExtras.buildSuffixArrayNaive("a");
+    assertArrayEquals(new int[] {0}, sa);
+}
+
+// MISSING: Two characters (minimal comparison)
+@Test
+public void testBuildSuffixArray_TwoChars() {
+    int[] sa = SuffixArrayExtras.buildSuffixArrayNaive("ab");
+    assertArrayEquals(new int[] {0, 1}, sa);  // "ab", "b"
+}
+
+// MISSING: All identical characters
+@Test
+public void testBuildSuffixArray_AllSame() {
+    int[] sa = SuffixArrayExtras.buildSuffixArrayNaive("aaaa");
+    assertArrayEquals(new int[] {3, 2, 1, 0}, sa);  // Sorted by length
+}
+
+// MISSING: Very long string (performance boundary)
+@Test
+public void testBuildSuffixArray_LongString() {
+    String s = "a".repeat(1000);
+    int[] sa = SuffixArrayExtras.buildSuffixArrayNaive(s);
+    assertEquals(1000, sa.length);
+    // Verify sorted by length (all same char)
+    for (int i = 0; i < 1000; i++) {
+        assertEquals(999 - i, sa[i]);
+    }
+}
